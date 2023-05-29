@@ -100,9 +100,9 @@ class Model:
         args:
             grads: gradients of the model
         """
-        for None:
-            if None:    # hint check if the layer is a layer and also is not a maxpooling layer
-                self.model[None].update(None)
+        # for None:
+        #     if None:    # hint check if the layer is a layer and also is not a maxpooling layer
+        #         self.model[None].update(None)
     
     def one_epoch(self, x, y):
         """

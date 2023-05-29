@@ -1,3 +1,5 @@
+from math import exp
+
 import numpy as np
 from abc import ABC, abstractmethod
 
@@ -28,8 +30,12 @@ class Activation:
         """
         pass
 
+
 class Sigmoid(Activation):
-    def forward(self, Z: np.ndarray) -> np.ndarray:
+    def exc(self, num):
+        return 1/1+exp(num)
+
+    def forward(self, Z:np.ndarray) -> np.ndarray:
         """
         Sigmoid activation function.
             args:
@@ -37,9 +43,8 @@ class Sigmoid(Activation):
             returns:
                 sigmoid(x)
         """
-        # TODO: Implement sigmoid activation function
-        A = None
-        return A
+        sig = np.vectorize()
+        return sig(Z)
 
     def backward(self, dA: np.ndarray, Z: np.ndarray) -> np.ndarray:
         """
@@ -52,9 +57,8 @@ class Sigmoid(Activation):
         """
         A = self.forward(Z)
         # TODO: Implement backward pass for sigmoid activation function
-        dZ = None
+        dZ = A * (1-A)
         return dZ
-    
 
 class ReLU(Activation):
     def forward(self, Z: np.ndarray) -> np.ndarray:
