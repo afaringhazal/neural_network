@@ -85,8 +85,8 @@ class FC:
         dA_prev = dZ @ W.T
         grads = [dW, db]
         # reshape dA_prev to the shape of A_prev
-        if None:    # check if A_prev is output of convolutional layer
-            dA_prev = dA_prev.T.reshape(self.input_shape)
+        # if None:    # check if A_prev is output of convolutional layer
+        #     dA_prev = dA_prev.T.reshape(self.input_shape)
         return dA_prev, grads
     
     def update(self, optimizer, grads):
@@ -97,7 +97,3 @@ class FC:
                 grads: list of gradients for the weights and bias
         """
         self.parameters = optimizer.update(grads, self.name)
-
-
-my_class = FC(4,2,"my_FC")
-print("successful")
