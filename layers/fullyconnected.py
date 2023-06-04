@@ -1,7 +1,11 @@
 import numpy as np
 
-class FC:
+from abs_layer import Abs_layer
+
+
+class FC(Abs_layer):
     def __init__(self, input_size: int, output_size: int, name: str, initialize_method: str = "random"):
+        super().__init__()
         self.input_size = input_size
         self.output_size = output_size
         self.name = name
@@ -13,7 +17,7 @@ class FC:
     def initialize_weights(self):
         if self.initialize_method == "random":
             val = np.random.randn(self.input_size, self.output_size) * 0.01
-            print(f'weight(random) :\n {val}')
+            # print(f'weight(random) :\n {val}')
             return val
 
         elif self.initialize_method == "xavier":
@@ -21,14 +25,14 @@ class FC:
             xavier_scale = np.sqrt(2 / (self.input_size + self.output_size))
             # Initialize the weights of the network using Xavier initialization
             val = np.random.normal(scale=xavier_scale, size=(self.input_size, self.output_size))
-            print(f'weight(random) :\n {val}')
+            # print(f'weight(random) :\n {val}')
             return val
 
         elif self.initialize_method == "he":
             he_scale = np.sqrt(2 / self.output_size)
             # Initialize the weights of the network using He initialization
             val = np.random.normal(scale=he_scale, size=(self.input_size, self.output_size))
-            print(f'weight(random) :\n {val}')
+            # print(f'weight(random) :\n {val}')
             return val
         else:
             raise ValueError("Invalid initialization method")
@@ -96,4 +100,4 @@ class FC:
                 optimizer: optimizer object
                 grads: list of gradients for the weights and bias
         """
-        self.parameters = optimizer.update(grads, self.name)
+        self.parameters = optimizer.update(grads, self.name, self.parameters)
