@@ -1,9 +1,9 @@
+from abs_layer import Abs_layer
 from layers.convolution2d import Conv2D
 from layers.maxpooling2d import MaxPool2D
 from layers.fullyconnected import FC
-
+from typing import Dict, Set, List
 from activations import Activation, get_activation
-
 import pickle
 import tqdm
 import numpy as np
@@ -21,7 +21,7 @@ class Model:
             name: name of the model
         """
         if name is None:
-            self.model = arch
+            self.model: Dict[str, Abs_layer] = arch
             self.criterion = criterion
             self.optimizer = optimizer
             self.layers_names = list(arch.keys())
@@ -37,7 +37,8 @@ class Model:
             True if the layer is a layer, False otherwise
         """
         # TODO: Implement check if the layer is a layer
-        return None
+
+        return isinstance(layer, FC) or isinstance(layer,Conv2D) or isinstance(layer,MaxPool2D)
 
     def is_activation(self, layer):
         """
@@ -48,7 +49,7 @@ class Model:
             True if the layer is an activation function, False otherwise
         """
         # TODO: Implement check if the layer is an activation
-        return None
+        return isinstance(layer,Activation)
     
     def forward(self, x):
         """
@@ -62,11 +63,14 @@ class Model:
         A = x
         # TODO: Implement forward pass through the model
         # NOTICE: we have a pattern of layers and activations
-        for l in range(None):
-            Z = None
-            tmp.append(None)    # hint add a copy of Z to tmp
-            A = None
-            tmp.append(None)    # hint add a copy of A to tmp
+        tmp.append(x)
+        # values = self.model.values()
+        keys = self.layers_names
+        for l in range(0, len(keys), 2):
+            Z = self.model[keys[l]].forward(A)
+            tmp.append(Z)    # hint add a copy of Z to tmp
+            A = self.model[keys[l+1]].forward(Z)
+            tmp.append(A)    # hint add a copy of A to tmp
         return tmp
     
     def backward(self, dAL, tmp, x):
@@ -84,14 +88,18 @@ class Model:
         # TODO: Implement backward pass through the model
         # NOTICE: we have a pattern of layers and activations
         # for from the end to the beginning of the tmp list
-        for l in range(None):
+        names = self.layers_names
+        i = len(names)
+        for l in range(len(tmp), 0, -2):
             if l > 2:
-                Z, A = tmp[l - 1], tmp[l - 2]
+                Z, A = tmp[l - 1], tmp[l - 2] # TODO change Z and A
             else:
                 Z, A = tmp[l - 1], x
-            dZ = None
-            dA, grad = None
-            grads[self.layers_names[l - 1]] = None
+                break
+            dZ = self.model[names[i-1]].backward(dA, Z)
+            dA, grad = self.model[names[i-2]].backward(dZ, A)
+            grads[self.layers_names[i - 2]] = grad
+            i -= 2
         return grads
 
     def update(self, grads):
@@ -100,11 +108,13 @@ class Model:
         args:
             grads: gradients of the model
         """
-        # for None:
-        #     if None:    # hint check if the layer is a layer and also is not a maxpooling layer
-        #         self.model[None].update(None)
+        keys = self.model.keys()
+        for name in keys:
+            if self.is_layer(self.model[name]):
+                if not isinstance(self.model[name], MaxPool2D):    # hint check if the layer is a layer and also is not a maxpooling layer
+                    self.model[name].update(self.optimizer, grads)
     
-    def one_epoch(self, x, y):
+    def one_epoch(self, x, y, batch_size):
         """
         One epoch of training.
         args:
@@ -115,12 +125,19 @@ class Model:
             loss
         """
         # TODO: Implement one epoch of training
-        tmp = None
-        AL = tmp[None]
-        loss = None
-        dAL = None
-        grads = None
-        self.update(None)
+        # num_batches = len(x) // batch_size
+        #
+        # for i in range(num_batches):
+        #     batch_x = x[i * batch_size:(i + 1) * batch_size]
+        #     batch_y = y[i * batch_size:(i + 1) * batch_size]
+
+        tmp = self.forward(x)
+        size_temp = len(tmp)
+        AL = tmp[size_temp-1] # خروجی activation آخر
+        loss = self.criterion.forward(AL, y)
+        dAL = self.criterion.backward(AL, y) # مشتق cost نسبت به AL
+        grads = self.backward(dAL, tmp, x)
+        self.update(grads)
         return loss
     
     def save(self, name):
@@ -164,16 +181,16 @@ class Model:
         """
         # TODO: Implement batch
         last_index = None   # hint last index of the batch check for the last batch
-        batch = order[None: None]
+        batch_order = order[index * batch_size: (index+1) * batch_size]
         # NOTICE: inputs are 4 dimensional or 2 demensional
-        if None:
-            bx = None
-            by = None
-            return None, None
+        if len(X.shape) == 4:
+            bx = X[batch_order, :, :, :]
+            by = y[batch_order]
+            return bx, by
         else:
-            bx = None
-            by = None
-            return None, None
+            bx = X[batch_order, :]
+            by = y[batch_order]
+            return bx, by
 
     def compute_loss(self, X, y, batch_size):
         """
@@ -186,17 +203,18 @@ class Model:
             loss
         """
         # TODO: Implement compute loss
-        m = None
-        order = None
+        m = X.shape[0]  # give the number of rows in X
+        order = self.shuffle(m, True)
         cost = 0
         for b in range(m // batch_size):
-            bx, by = None
-            tmp = None
-            AL = None
-            cost += None
-        return cost
+            bx, by = self.batch(X, y, batch_size, b, order)
+            tmp = self.forward(bx)
+            size_tmp = len(tmp)
+            AL = tmp[size_tmp-1]
+            cost += self.criterion.forward(AL, by)
+        return cost / (m // batch_size)  # normalize
 
-    def train(self, X, y, epochs, val=None, batch_size=3, shuffling=False, verbose=1, save_after=None):
+    def train(self, X, y, epochs, val=None, batch_size=3, shuffling=False, verbose=1, save_after=None): # batch size nabayad bishtar bashe?
         """
         Train the model.
         args:
@@ -213,14 +231,26 @@ class Model:
         train_cost = []
         val_cost = []
         # NOTICE: if your inputs are 4 dimensional m = X.shape[0] else m = X.shape[1]
-        m = None
-        for e in tqdm(1, epochs + 1):
-            order = self.shuffle(None, None)
+        if len(X.shape) == 4:
+            m = X.shape[0] # TODO
+        else:
+            m = X.shape[0]  # TODO
+        for e in range(1, epochs + 1):
+            order = self.shuffle(m, shuffling)
             cost = 0
-            for b in range(None):
-                bx, by = None
-                cost += None
-            train_cost.append(None)
+            for b in range(m // batch_size):
+                bx, by = self.batch(X, y, batch_size, b, order)
+                tmp = self.forward(bx)
+                size_tmp = len(tmp)
+                AL = tmp[size_tmp - 1]
+                dAL = self.criterion.backward(AL, by)  # مشتق cost نسبت به AL
+                grads = self.backward(dAL, tmp, bx)
+
+
+                cost += self.criterion.forward(AL, by)
+                self.update(grads)
+            cost = cost / (m // batch_size)
+            train_cost.append(cost)
             if val is not None:
                 val_cost.append(None)
             if verbose != False:
@@ -241,4 +271,6 @@ class Model:
             predictions
         """
         # TODO: Implement prediction
-        return None
+        return self.forward(X)[-1]
+
+
