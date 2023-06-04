@@ -4,7 +4,7 @@ class MeanSquaredError:
     def __init__(self):
         pass
 
-    def compute(self, y_pred, y_true):
+    def forward(self, y_pred, y_true):
         """
         computes the mean squared error loss
             args:
