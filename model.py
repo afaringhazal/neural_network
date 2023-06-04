@@ -63,7 +63,7 @@ class Model:
         A = x
         # TODO: Implement forward pass through the model
         # NOTICE: we have a pattern of layers and activations
-        tmp.append(x)
+        # tmp.append(x)
         # values = self.model.values()
         keys = self.layers_names
         for l in range(0, len(keys), 2):
@@ -92,12 +92,11 @@ class Model:
         i = len(names)
         for l in range(len(tmp), 0, -2):
             if l > 2:
-                Z, A = tmp[l - 1], tmp[l - 2] # TODO change Z and A
+                Z, A_prev = tmp[l - 2], tmp[l - 3] # TODO A is not activation it is A_prev
             else:
-                Z, A = tmp[l - 1], x
-                break
-            dZ = self.model[names[i-1]].backward(dA, Z)
-            dA, grad = self.model[names[i-2]].backward(dZ, A)
+                Z, A_prev = tmp[l - 2], x
+            dZ = self.model[names[i-1]].backward(dA, Z)  # call backward activation function
+            dA, grad = self.model[names[i-2]].backward(dZ, A_prev)  #
             grads[self.layers_names[i - 2]] = grad
             i -= 2
         return grads
@@ -114,7 +113,7 @@ class Model:
                 if not isinstance(self.model[name], MaxPool2D):    # hint check if the layer is a layer and also is not a maxpooling layer
                     self.model[name].update(self.optimizer, grads)
     
-    def one_epoch(self, x, y, batch_size):
+    def one_epoch(self, x, y):
         """
         One epoch of training.
         args:
@@ -130,15 +129,26 @@ class Model:
         # for i in range(num_batches):
         #     batch_x = x[i * batch_size:(i + 1) * batch_size]
         #     batch_y = y[i * batch_size:(i + 1) * batch_size]
-
         tmp = self.forward(x)
-        size_temp = len(tmp)
-        AL = tmp[size_temp-1] # خروجی activation آخر
-        loss = self.criterion.forward(AL, y)
-        dAL = self.criterion.backward(AL, y) # مشتق cost نسبت به AL
+        size_tmp = len(tmp)
+        AL = tmp[size_tmp - 1]
+        loss = self.criterion.forward(AL, y)  # calculate cost y_pred and y_true
+        # now do backward
+        dAL = self.criterion.backward(AL, y)  # مشتق cost نسبت به AL
         grads = self.backward(dAL, tmp, x)
+        # Update
         self.update(grads)
         return loss
+        # tmp = self.forward(x)
+        # size_temp = len(tmp)
+        # AL = tmp[size_temp-1] # خروجی activation آخر
+        # loss += self.criterion.forward(AL, y)
+        # dAL = self.criterion.backward(AL, y) # مشتق cost نسبت به AL
+        # grads = self.backward(dAL, tmp, x)
+        # self.update(grads)
+        # return loss
+
+
     
     def save(self, name):
         """
@@ -238,17 +248,21 @@ class Model:
         for e in range(1, epochs + 1):
             order = self.shuffle(m, shuffling)
             cost = 0
+            loss =0
             for b in range(m // batch_size):
                 bx, by = self.batch(X, y, batch_size, b, order)
-                tmp = self.forward(bx)
-                size_tmp = len(tmp)
-                AL = tmp[size_tmp - 1]
-                dAL = self.criterion.backward(AL, by)  # مشتق cost نسبت به AL
-                grads = self.backward(dAL, tmp, bx)
-
-
-                cost += self.criterion.forward(AL, by)
-                self.update(grads)
+                loss = self.one_epoch(bx, by)
+                # print(f'loss : {loss}')
+                cost += loss
+                # tmp = self.forward(bx)
+                # size_tmp = len(tmp)
+                # AL = tmp[size_tmp - 1]
+                # cost += self.criterion.forward(AL, by) # calculate cost y_pred and y_true
+                # # now do backward
+                # dAL = self.criterion.backward(AL, by)  # مشتق cost نسبت به AL
+                # grads = self.backward(dAL, tmp, bx)
+                # # Update
+                # self.update(grads)
             cost = cost / (m // batch_size)
             train_cost.append(cost)
             if val is not None:
