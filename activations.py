@@ -1,9 +1,12 @@
 import numpy as np
 from abc import ABC, abstractmethod
 
-class Activation:
+from abs_layer import Abs_layer
+
+
+class Activation(Abs_layer):
     def __init__(self) -> None:
-        pass
+        super().__init__()
 
     @abstractmethod
     def forward(self, Z: np.ndarray) -> np.ndarray:
@@ -64,10 +67,7 @@ class ReLU(Activation):
                 relu(x)
         """
         # TODO: Implement ReLU activation function
-        A = Z
-        if A < 0:
-            return 0
-        return A
+        return np.where(Z > 0, Z, 0)
 
     def backward(self, dA: np.ndarray, Z: np.ndarray) -> np.ndarray:
         """
@@ -113,7 +113,7 @@ class Tanh(Activation):
         A = self.forward(Z)
 
         # TODO: Implement backward pass for tanh activation function
-        dZ = dA * (1 - (A*A))
+        dZ = (1 - (np.square(A))) * dA
         return dZ
     
 class LinearActivation(Activation):
@@ -129,7 +129,7 @@ class LinearActivation(Activation):
         A = Z
         return A
 
-    def backward(dA: np.ndarray, Z: np.ndarray) -> np.ndarray:
+    def backward(dA: np.ndarray, Z: np.ndarray) -> np.ndarray: #TODO Fixe me
         """
         Backward pass for linear activation function.
             args:
