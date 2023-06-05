@@ -96,10 +96,10 @@ class Tanh(Activation):
                 tanh(x)
         """
         # TODO: Implement tanh activation function
-        exp_z = np.exp(Z)
-        negative_exp_z = np.exp(-Z)
-        A = (exp_z - negative_exp_z)/(exp_z + negative_exp_z)
-        return A
+        # exp_z = np.exp(Z)
+        # negative_exp_z = np.exp(-Z)
+        # A = (exp_z - negative_exp_z)/(exp_z + negative_exp_z)
+        return np.tanh(Z)
 
     def backward(self, dA: np.ndarray, Z: np.ndarray) -> np.ndarray:
         """
@@ -117,7 +117,7 @@ class Tanh(Activation):
         return dZ
     
 class LinearActivation(Activation):
-    def linear(Z: np.ndarray) -> np.ndarray:
+    def forward(self,Z: np.ndarray) -> np.ndarray:
         """
         Linear activation function.
             args:
@@ -129,7 +129,7 @@ class LinearActivation(Activation):
         A = Z
         return A
 
-    def backward(dA: np.ndarray, Z: np.ndarray) -> np.ndarray: #TODO Fixe me
+    def backward(self,dA: np.ndarray, Z: np.ndarray) -> np.ndarray: #TODO Fixe me
         """
         Backward pass for linear activation function.
             args:
