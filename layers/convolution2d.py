@@ -22,7 +22,8 @@ class Conv2D:
         # TODO: Implement initialization of weights
         
         if self.initialize_method == "random":
-            return None * 0.01
+            val = np.random.randn(self.kernel_size[0], self.kernel_size[1],self.in_channels, self.out_channels) * 0.01
+            return val
         if self.initialize_method == "xavier":
             return None
         if self.initialize_method == "he":
@@ -38,8 +39,8 @@ class Conv2D:
         
         """
         # TODO: Implement initialization of bias
-        return None
-    
+        return np.zeros((1, 1, 1, self.out_channels))
+
     def target_shape(self, input_shape):
         """
         Calculate the shape of the output of the convolutional layer.
@@ -49,10 +50,14 @@ class Conv2D:
             target_shape: shape of the output of the convolutional layer
         """
         # TODO: Implement calculation of target shape
-        H = None
-        W = None
-        return (H, W)
-    
+        batch_size, input_height, input_width, input_channels = input_shape
+        # Compute output height and width
+        output_height = int((input_height + 2 * self.padding[0] - self.kernel_size[0]) / self.stride[0] + 1)
+        output_width = int((input_width + 2 * self.padding[1] - self.kernel_size[1]) / self.stride[1] + 1)
+        # Return target shape
+        return (output_height, output_width)
+
+
     def pad(self, A, padding, pad_value=0):
         """
         Pad the input with zeros.
@@ -77,9 +82,9 @@ class Conv2D:
             Z: convolved value
         """
         # TODO: Implement single step convolution
-        Z = None    # hint: element-wise multiplication
-        Z = None    # hint: sum over all elements
-        Z = None    # hint: add bias as type float using np.float(None)
+        Z = W * a_slic_prev    # hint: element-wise multiplication
+        Z = np.sum(Z)    # hint: sum over all elements
+        Z = Z + b    # hint: add bias as type float using np.float(None)
         return Z
 
     def forward(self, A_prev):
@@ -92,24 +97,24 @@ class Conv2D:
                 A: output of the convolutional layer
         """
         # TODO: Implement forward pass
-        W, b = None
-        (batch_size, H_prev, W_prev, C_prev) = None
-        (kernel_size_h, kernel_size_w, C_prev, C) = None
-        stride_h, stride_w = None
-        padding_h, padding_w = None
-        H, W = None
-        Z = None
-        A_prev_pad = None # hint: use self.pad()
-        for i in range(None):
-            for h in range(None):
-                h_start = None
-                h_end = h_start + None
-                for w in range(None):
-                    w_start = None
-                    w_end = w_start + None
-                    for c in range(None):
+        Weigth, bias = self.parameters
+        (batch_size, H_prev, W_prev, input_chanel_prev) = A_prev.shape #  C_prev : input_channels
+        (kernel_size_h, kernel_size_w, input_chanel_prev, output_chanel) = Weigth.shape # C_prev : in_chanels , C :out_chanel
+        stride_h, stride_w = self.stride
+        padding_h, padding_w = self.padding
+        output_Hight, output_Width = self.target_shape((H_prev, W_prev))
+        Z = np.zeros((batch_size, output_Hight, output_Width, output_chanel)) # now initialized result
+        A_prev_pad = self.pad(A_prev, padding=(padding_h, padding_w))  # hint: use self.pad()
+        for i in range(batch_size):
+            for h in range(output_Hight):
+                h_start = h * stride_h - padding_h
+                h_end = h_start + kernel_size_h
+                for w in range(output_Width):
+                    w_start = w * stride_w - padding_w
+                    w_end = w_start + kernel_size_w
+                    for c in range(output_chanel):
                         a_slice_prev = A_prev_pad[i, h_start:h_end, w_start:w_end, :]
-                        Z[i, h, w, c] = None # hint: use self.single_step_convolve()
+                        Z[i, h, w, c] = self.single_step_convolve(a_slice_prev,Weigth, bias) # hint: use self.single_step_convolve()
         return Z
 
     def backward(self, dZ, A_prev):
