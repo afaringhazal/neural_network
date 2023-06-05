@@ -10,7 +10,7 @@ class GD:
         self.learning_rate = learning_rate
         self.layers = layers_list
     
-    def update(self, grads, name, parameters):
+    def update(self, grads, name):
         """
         Update the parameters of the layer.
             args:
@@ -19,7 +19,8 @@ class GD:
             returns:
                 params: list of updated parameters
         """
-        # layer = self.layers[name]
+        layer = self.layers[name]
+        parameters = layer.parameters
         params = []
         #TODO: Implement gradient descent update
         for i in range(len(grads[name])):
