@@ -4,7 +4,7 @@ class BinaryCrossEntropy:
     def __init__(self) -> None:
         pass
 
-    def compute(self, y_hat: np.ndarray, y: np.ndarray) -> float:
+    def forward(self, y_hat: np.ndarray, y: np.ndarray) -> float:
         """
         Computes the binary cross entropy loss.
             args:
@@ -26,6 +26,6 @@ class BinaryCrossEntropy:
                 derivative of the binary cross entropy loss
         """
         # Calculate the derivative of the binary cross-entropy loss function
-        bce_deriv = -(y / y_hat) + ((1 - y) / (1 - y_hat))
+        bce_deriv = (-(y / y_hat) + ((1 - y) / (1 - y_hat))) / len(y_hat)
         return bce_deriv
 
