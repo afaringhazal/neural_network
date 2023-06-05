@@ -92,7 +92,7 @@ class Model:
         i = len(names)
         for l in range(len(tmp), 0, -2):
             if l > 2:
-                Z, A_prev = tmp[l - 2], tmp[l - 3] # TODO A is not activation it is A_prev
+                Z, A_prev = tmp[l - 2], tmp[l - 3]
             else:
                 Z, A_prev = tmp[l - 2], x
             dZ = self.model[names[i-1]].backward(dA, Z)  # call backward activation function
@@ -124,30 +124,18 @@ class Model:
             loss
         """
         # TODO: Implement one epoch of training
-        # num_batches = len(x) // batch_size
-        #
-        # for i in range(num_batches):
-        #     batch_x = x[i * batch_size:(i + 1) * batch_size]
-        #     batch_y = y[i * batch_size:(i + 1) * batch_size]
         tmp = self.forward(x)
         size_tmp = len(tmp)
         AL = tmp[size_tmp - 1]
+        # print(f'AL : {AL}')
         loss = self.criterion.forward(AL, y)  # calculate cost y_pred and y_true
         # now do backward
         dAL = self.criterion.backward(AL, y)  # مشتق cost نسبت به AL
         grads = self.backward(dAL, tmp, x)
+        # print(f'grads : {grads}')
         # Update
         self.update(grads)
         return loss
-        # tmp = self.forward(x)
-        # size_temp = len(tmp)
-        # AL = tmp[size_temp-1] # خروجی activation آخر
-        # loss += self.criterion.forward(AL, y)
-        # dAL = self.criterion.backward(AL, y) # مشتق cost نسبت به AL
-        # grads = self.backward(dAL, tmp, x)
-        # self.update(grads)
-        # return loss
-
 
     
     def save(self, name):
@@ -173,7 +161,7 @@ class Model:
     def shuffle(self, m, shuffling):
         order = list(range(m))
         if shuffling:
-            return np.random.shuffle(order)
+            np.random.shuffle(order)
         return order
 
     def batch(self, X, y, batch_size, index, order):
@@ -224,7 +212,7 @@ class Model:
             cost += self.criterion.forward(AL, by)
         return cost / (m // batch_size)  # normalize
 
-    def train(self, X, y, epochs, val=None, batch_size=3, shuffling=False, verbose=1, save_after=None): # batch size nabayad bishtar bashe?
+    def train(self, X, y, epochs, val=None, batch_size= 5 , shuffling=False, verbose=1, save_after=None): # batch size nabayad bishtar bashe?
         """
         Train the model.
         args:
@@ -252,18 +240,9 @@ class Model:
             for b in range(m // batch_size):
                 bx, by = self.batch(X, y, batch_size, b, order)
                 loss = self.one_epoch(bx, by)
-                # print(f'loss : {loss}')
                 cost += loss
-                # tmp = self.forward(bx)
-                # size_tmp = len(tmp)
-                # AL = tmp[size_tmp - 1]
-                # cost += self.criterion.forward(AL, by) # calculate cost y_pred and y_true
-                # # now do backward
-                # dAL = self.criterion.backward(AL, by)  # مشتق cost نسبت به AL
-                # grads = self.backward(dAL, tmp, bx)
-                # # Update
-                # self.update(grads)
             cost = cost / (m // batch_size)
+            print(f'cost  : {cost}')
             train_cost.append(cost)
             if val is not None:
                 val_cost.append(None)
@@ -285,6 +264,10 @@ class Model:
             predictions
         """
         # TODO: Implement prediction
-        return self.forward(X)[-1]
+        # return None
+        tmp = self.forward(X)
+        siz = len(tmp)
+        return tmp[siz-1]
+
 
 
